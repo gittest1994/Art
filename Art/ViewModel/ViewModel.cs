@@ -1,20 +1,27 @@
-﻿using Microsoft.WindowsAPICodePack.Shell;
+﻿using log4net;
+using Microsoft.WindowsAPICodePack.Shell;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace Art
 {
     public class ViewModel
     {
+        private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public class ImageData
         {
             public string TagName { get; set; }
@@ -124,6 +131,173 @@ namespace Art
                 }
                 return bitmap;
             });
+        }
+
+        public async Task LoadFolder(string path, ListBox listBox, ToggleButton ButtonNude)
+        {
+            try
+            {
+                Images.Clear();
+
+                bool isNude = false;
+                dynamic selectedItem = listBox.SelectedItems[0];
+                isNude = false;
+                if(ButtonNude.IsChecked == true)
+                {
+                    foreach (var item in nudeData)
+                    {
+                        if (item.Equals(Path.GetFileNameWithoutExtension(path)))
+                        {
+                            isNude = true;
+                            break;
+                        }
+                    }
+                }
+                if (isNude)
+                    return;
+                Images.Add(new ImageData { ImageSource = await loadImage(path), TagName = path });
+
+
+            }
+            catch (NullReferenceException e)
+            {
+                log.Error("LoadFolderTitle " + Environment.NewLine + e.Message);
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadFolderTitle " + Environment.NewLine + ex.Message);
+            }
+        }
+
+        public async Task LoadFolder(CancellationToken ct, ListBox listbox, ToggleButton ButtonNude)
+        {
+            try
+            {
+                bool isNude = false;
+                dynamic selectedItem = listbox.SelectedItems[0];
+                foreach (var path in Directory.EnumerateFiles(GlobalData.Config.DataPath + @"\" + selectedItem.Name, "*.jpg"))
+                {
+                    isNude = false;
+
+                    if (!ct.IsCancellationRequested)
+                    {
+                        if(ButtonNude.IsChecked == true)
+                        {
+                            foreach (var item in nudeData)
+                            {
+                                if (item.Equals(Path.GetFileNameWithoutExtension(path)))
+                                {
+                                    isNude = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (isNude)
+                            return;
+
+                        await Dispatcher.CurrentDispatcher.InvokeAsync(async () =>
+                        {
+                            Images.Add(new ImageData { ImageSource = await loadImage(path), TagName = path });
+                        }, DispatcherPriority.Background);
+                    }
+                }
+            }
+            catch (NullReferenceException e)
+            {
+                log.Error("LoadFolder " + Environment.NewLine + e.Message);
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadFolder " + Environment.NewLine + ex.Message);
+            }
+        }
+
+        int TotalItem = 0;
+        private async Task<FileInfo[]> GetFileListAsync(string path)
+        {
+            FileInfo[] allFiles = null;
+            await Task.Run(() =>
+            {
+                var dir = new DirectoryInfo(path);
+                allFiles = dir.GetFiles("*.jpg*", SearchOption.AllDirectories);
+            });
+            TotalItem = allFiles.Count();
+            return allFiles;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="progress">IProgress for Report Task Status</param>
+        /// <param name="ct">Cancellation Token</param>
+        /// <param name="KeywordIndex">City = [0], Country = [1], Gallery = [2]</param>
+        /// <param name="prg">ProgressBar</param>
+        /// <param name="listBox">ListBox</param>
+        /// <param name="ButtonNude">Button Nude</param>
+        /// <returns></returns>
+        public async Task LoadCategory(IProgress<int> progress, CancellationToken ct, int KeywordIndex, ProgressBar prg, ListBox listBox, ToggleButton ButtonNude)
+        {
+            try
+            {
+                Images.Clear();
+
+                var mprogress = 0;
+                prg.Value = 0;
+                dynamic check;
+                bool isNude = false;
+                foreach (var file in await GetFileListAsync(GlobalData.Config.DataPath))
+                {
+                    dynamic selectedItem = listBox.SelectedItems[0];
+
+                    isNude = false;
+                    mprogress += 1;
+                    progress.Report(mprogress * 100 / TotalItem);
+                    if (!ct.IsCancellationRequested)
+                    {
+                        var item = ShellFile.FromFilePath(file.FullName);
+                        if(ButtonNude.IsChecked == true)
+                        {
+                            foreach (var itemx in nudeData)
+                            {
+                                if (itemx.Equals(Path.GetFileNameWithoutExtension(file.FullName)))
+                                {
+                                    isNude = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (isNude)
+                            return;
+
+                        if (KeywordIndex == 2)
+                            check = item?.Properties.System.Comment.Value ?? "null";
+                        else
+                            check = item?.Properties.System.Keywords.Value?[KeywordIndex] ?? "null";
+
+                        await Dispatcher.CurrentDispatcher.InvokeAsync(async () => {
+
+                            if (check.Equals(selectedItem.Name))
+                            {
+                                Images.Add(new ImageData { ImageSource = await loadImage(file.FullName), TagName = file.FullName });
+                            }
+
+                        }, DispatcherPriority.Background);
+
+                    }
+                    
+
+                }
+
+            }
+            catch (NullReferenceException e)
+            {
+                log.Error("LoadCategory " + Environment.NewLine + e.Message);
+            }
+            catch (Exception ex)
+            {
+                log.Error("LoadCategory " + Environment.NewLine + ex.Message);
+            }
         }
     }
 }
