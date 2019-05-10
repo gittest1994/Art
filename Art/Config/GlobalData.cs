@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Art.Config
+namespace Art
 {
     internal class GlobalData
     {
