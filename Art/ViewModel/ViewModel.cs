@@ -1,12 +1,15 @@
-﻿using System;
+﻿using Microsoft.WindowsAPICodePack.Shell;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Art
 {
@@ -78,6 +81,49 @@ namespace Art
                 nudeData.Add(item);
         }
 
+        public async Task loadTitle(IProgress<int> progress, CancellationToken ct, ProgressBar prg)
+        {
+            ArtistNames.Clear();
 
+            var mprogress = 0;
+            prg.Value = 0;
+            int totalFiles = Directory.EnumerateFiles(GlobalData.Config.DataPath, "*.jpg", SearchOption.AllDirectories).Count();
+
+            foreach (var line in Directory.EnumerateFiles(GlobalData.Config.DataPath, "*.jpg", SearchOption.AllDirectories))
+            {
+                if (!ct.IsCancellationRequested)
+                {
+                    mprogress += 1;
+                    progress.Report((mprogress * 100 / totalFiles));
+
+                    var item = ShellFile.FromFilePath(line);
+
+                    ArtistNames.Add(new ArtistData {
+                        Name = item.Properties.System.Title.Value,
+                        Tag = line
+                    });
+                    await Task.Delay(5);
+                }
+            }
+        }
+
+        public Task<BitmapImage> loadImage(string Path)
+        {
+            return Task.Run(() =>
+            {
+
+                var bitmap = new BitmapImage();
+                using (var stream = new FileStream(Path, FileMode.Open, FileAccess.Read))
+                {
+                    bitmap.BeginInit();
+                    bitmap.DecodePixelHeight = 300;
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = stream;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                }
+                return bitmap;
+            });
+        }
     }
 }
