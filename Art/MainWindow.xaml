@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Art"
                      xmlns:enum="clr-namespace:HandyControl.Data;assembly=HandyControl"
-        NonClientAreaBackground="Black"
+        NonClientAreaBackground="#FF403D3D"
                      OtherButtonForeground="White"
                      OtherButtonHoverForeground="White"
                      CloseButtonForeground="Orange"
@@ -26,7 +26,7 @@
             <StackPanel VerticalAlignment="Stretch" Orientation="Horizontal">
                 <Menu Margin="10,0,0,0" Background="Transparent">
                     <MenuItem Foreground="White" Header="Config">
-                        <MenuItem Header="Change Path">
+                        <MenuItem Name="mnuConfig" Click="MnuConfig_Click" Header="Change Path">
                             <MenuItem.Icon>
                                 <Path Data="{StaticResource ConfigGeometry}" Fill="{DynamicResource PrimaryTextBrush}"/>
                             </MenuItem.Icon>
@@ -53,7 +53,7 @@
                             <Border Background="Black" Width="32" Height="21" CornerRadius="2" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"/>
                         </Button>
                         <Button Tag="{x:Static enum:SkinType.Violet}" Style="{StaticResource ButtonCustom}">
-                            <Border Background="Violet" Width="32" Height="21" CornerRadius="2" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"/>
+                            <Border Background="Purple" Width="32" Height="21" CornerRadius="2" BorderThickness="1" BorderBrush="{DynamicResource BorderBrush}"/>
                         </Button>
                     </StackPanel>
                 </Border>
@@ -77,8 +77,8 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <StackPanel Margin="5,5,10,0" Grid.Row="0">
-                            <ToggleButton Margin="0,5,0,0" HorizontalAlignment="Stretch" Style="{DynamicResource ToggleButtonPrimary}" Name="ButtonNude" Content="Nude Filter"/>
-                            <ComboBox Margin="0,5,0,0" Background="Transparent" Style="{StaticResource ComboBoxExtend}" Name="cbFilter" SelectedIndex="0" controls:InfoElement.Placeholder="Select Category">
+                            <ToggleButton Checked="ButtonNude_Checked" Unchecked="ButtonNude_Checked" Margin="0,5,0,0" HorizontalAlignment="Stretch" Style="{DynamicResource ToggleButtonPrimary}" Name="ButtonNude" Content="Nude Filter"/>
+                            <ComboBox SelectionChanged="CbFilter_SelectionChanged" Margin="0,5,0,0" Background="Transparent" Style="{StaticResource ComboBoxExtend}" Name="cbFilter" SelectedIndex="0" controls:InfoElement.Placeholder="Select Category">
                                 <ComboBoxItem Content="Artist"/>
                                 <ComboBoxItem Content="Country"/>
                                 <ComboBoxItem Content="City"/>
@@ -86,7 +86,7 @@
                                 <ComboBoxItem Content="Title"/>
                             </ComboBox>
 
-                            <controls:SearchBar IsRealTime="True" Height="35" Background="Transparent" Margin="0,5,0,0" Name="txtSearch" HorizontalAlignment="Stretch">
+                            <controls:SearchBar SearchStarted="TxtSearch_SearchStarted" IsRealTime="True" Height="35" Background="Transparent" Margin="0,5,0,0" Name="txtSearch" HorizontalAlignment="Stretch">
                                 <controls:SearchBar.Style>
                                     <Style BasedOn="{StaticResource SearchBarExtend}" TargetType="controls:SearchBar">
                                         <Setter Property="controls:InfoElement.Placeholder" Value="Search in Artist..."/>
@@ -111,12 +111,12 @@
                                 </controls:SearchBar.Style>
                             </controls:SearchBar>
                         </StackPanel>
-                        <ListBox ItemsSource="{Binding}" BorderThickness="0" Margin="0,0,5,0" Grid.Row="1" Name="listbox" SelectionMode="Single">
+                        <ListBox SelectionChanged="Listbox_SelectionChanged" ItemsSource="{Binding ArtistNames}" BorderThickness="0" Margin="0,0,5,0" Grid.Row="1" Name="listbox" SelectionMode="Single">
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <Grid>
-                                        <TextBlock Text="{Binding}"/>
-                                        <TextBlock Visibility="Collapsed" Text="{Binding}"/>
+                                        <TextBlock Text="{Binding Name}"/>
+                                        <TextBlock Visibility="Collapsed" Text="{Binding Tag}"/>
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
@@ -136,7 +136,7 @@
                             <controls:Shield Name="shCountry" Subject="Country" Margin="4,0,0,0" Color="{DynamicResource InfoBrush}"/>
                             <controls:Shield Name="shDate" Subject="Date" Margin="4,0,0,0" Color="{DynamicResource DarkDangerBrush}"/>
                             <controls:Shield Name="shItems" Subject="Items" Margin="4,0,0,0" Color="{DynamicResource DarkPrimaryBrush}"/>
-                            <Button Width="120" Margin="4,0,0,0" Name="cancelTaskButton" Content="Cancel Task">
+                            <Button Click="CancelTaskButton_Click" Width="120" Margin="4,0,0,0" Name="cancelTaskButton" Content="Cancel Task">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource ButtonDanger}">
                                         <Setter Property="Visibility" Value="Visible"/>
@@ -152,13 +152,13 @@
                         <controls:CoverView Tag="{Binding}" ItemsSource="{Binding}" ItemContentHeightFixed="True" Grid.Row="1" HorizontalAlignment="Stretch" Name="cover" ItemHeight="160" ItemWidth="160">
                             <controls:CoverView.ItemHeaderTemplate>
                                 <DataTemplate>
-                                    <Image x:Name="ImageHeader" Tag="{Binding}" Source="{Binding}">
+                                    <Image x:Name="ImageHeader" Tag="{Binding TagName}" Source="{Binding ImageSource}">
                                         <Image.ContextMenu>
                                             <ContextMenu>
-                                                <MenuItem Tag="{Binding}" Header="Set as Desktop"/>
-                                                <MenuItem Tag="{Binding}" Header="Go to Location"/>
-                                                <MenuItem Tag="{Binding}" Header="Full Screen"/>
-                                                <MenuItem Tag="{Binding}" Header="Set as Favorite"/>
+                                                <MenuItem Click="MenuItem_Click" Tag="{Binding TagName}" Header="Set as Desktop"/>
+                                                <MenuItem Click="MenuItem_Click" Tag="{Binding TagName}" Header="Go to Location"/>
+                                                <MenuItem Click="MenuItem_Click" Tag="{Binding TagName}" Header="Full Screen"/>
+                                                <MenuItem Click="MenuItem_Click" Tag="{Binding TagName}" Header="Set as Favorite"/>
                                             </ContextMenu>
                                         </Image.ContextMenu>
                                     </Image>

@@ -31,7 +31,6 @@ namespace Art
             //Todo: Enable BlurEffect
             //BlurWindow.SystemVersionInfo = GetSystemVersionInfo();
 
-            //Todo: Enable Skin
             if (GlobalData.Config.Skin != SkinType.Default)
                 UpdateSkin(GlobalData.Config.Skin);
 
@@ -49,7 +48,7 @@ namespace Art
             base.OnStartup(e);
         }
 
-        private void UpdateSkin(SkinType skin)
+        public void UpdateSkin(SkinType skin)
         {
             var skin0 = Resources.MergedDictionaries[0];
             skin0.MergedDictionaries.Clear();
