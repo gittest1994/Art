@@ -27,7 +27,7 @@ namespace Art
 
             log4net.Config.XmlConfigurator.Configure();
 
-            log.Info("     =========== Strated Logging ==========     ");
+            log.Info("     ============ Strated Logging ===========     ");
 
             BlurWindow.SystemVersionInfo = GetSystemVersionInfo();
 
