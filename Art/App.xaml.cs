@@ -13,7 +13,9 @@ using System.Threading.Tasks;
 using System.Windows;
 
 namespace Art
-{
+{ 
+
+
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
