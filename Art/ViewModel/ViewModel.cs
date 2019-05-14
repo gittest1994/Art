@@ -14,6 +14,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using System.Windows.Threading;
 
 namespace Art
@@ -33,19 +34,38 @@ namespace Art
             public string Name { get; set; }
             public string Tag { get; set; }
         }
-
         ObservableCollection<string> nudeData = new ObservableCollection<string>();
 
         public ObservableCollection<ImageData> Images { get; } = new ObservableCollection<ImageData>();
 
         public ObservableCollection<ArtistData> ArtistNames { get; } = new ObservableCollection<ArtistData>();
 
+        public ObservableCollection<ImageData> FavoriteImages { get; } = new ObservableCollection<ImageData>();
+
+        public async Task LoadFavorite(CancellationToken ct)
+        {
+            FavoriteImages.Clear();
+            var lines = File.ReadAllLines("fav.txt");
+            foreach (var item in lines)
+            {
+                if (!ct.IsCancellationRequested)
+                {
+                    FavoriteImages.Add(new ImageData
+                    {
+                        TagName = item,
+                        ImageSource = await loadImage(item)
+                    });
+                }
+            }
+             
+        }
+
         public void loadArtists()
         {
             ArtistNames.Clear();
             foreach (var item in Directory.EnumerateDirectories(GlobalData.Config.DataPath))
             {
-                ArtistNames.Add(new ArtistData { Name = item.Replace(Path.GetDirectoryName(item) + Path.DirectorySeparatorChar, "") });
+                ArtistNames.Add(new ArtistData { Name = item.Replace(System.IO.Path.GetDirectoryName(item) + System.IO.Path.DirectorySeparatorChar, "") });
             }
         }
 
@@ -146,7 +166,7 @@ namespace Art
                 {
                     foreach (var item in nudeData)
                     {
-                        if (item.Equals(Path.GetFileNameWithoutExtension(path)))
+                        if (item.Equals(System.IO.Path.GetFileNameWithoutExtension(path)))
                         {
                             isNude = true;
                             break;
@@ -173,6 +193,7 @@ namespace Art
         {
             try
             {
+                Images.Clear();
                 bool isNude = false;
                 dynamic selectedItem = listbox.SelectedItems[0];
                 foreach (var path in Directory.EnumerateFiles(GlobalData.Config.DataPath + @"\" + selectedItem.Name, "*.jpg"))
@@ -185,7 +206,7 @@ namespace Art
                         {
                             foreach (var item in nudeData)
                             {
-                                if (item.Equals(Path.GetFileNameWithoutExtension(path)))
+                                if (item.Equals(System.IO.Path.GetFileNameWithoutExtension(path)))
                                 {
                                     isNude = true;
                                     break;
@@ -259,7 +280,7 @@ namespace Art
                         {
                             foreach (var itemx in nudeData)
                             {
-                                if (itemx.Equals(Path.GetFileNameWithoutExtension(file.FullName)))
+                                if (itemx.Equals(System.IO.Path.GetFileNameWithoutExtension(file.FullName)))
                                 {
                                     isNude = true;
                                     break;

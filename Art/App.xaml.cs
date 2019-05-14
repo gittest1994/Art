@@ -8,6 +8,7 @@ using System.Configuration;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Management;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -28,11 +29,13 @@ namespace Art
 
             log.Info("     =========== Strated Logging ==========     ");
 
-            //Todo: Enable BlurEffect
-            //BlurWindow.SystemVersionInfo = GetSystemVersionInfo();
+            BlurWindow.SystemVersionInfo = GetSystemVersionInfo();
 
             if (GlobalData.Config.Skin != SkinType.Default)
                 UpdateSkin(GlobalData.Config.Skin);
+
+            if (!File.Exists("fav.txt"))
+                File.AppendText("fav.txt");
 
             if (!Directory.Exists(GlobalData.Config.DataPath))
                 GlobalData.Config.DataPath = Environment.CurrentDirectory + @"\data";
@@ -54,6 +57,22 @@ namespace Art
             skin0.MergedDictionaries.Clear();
             skin0.MergedDictionaries.Add(ResourceHelper.GetSkin(skin));
             Current.MainWindow?.OnApplyTemplate();
+        }
+
+        public static SystemVersionInfo GetSystemVersionInfo()
+        {
+            var managementClass = new ManagementClass("Win32_OperatingSystem");
+            var instances = managementClass.GetInstances();
+            foreach (var instance in instances)
+            {
+                if (instance["Version"] is string version)
+                {
+                    var nums = version.Split('.').Select(int.Parse).ToList();
+                    var info = new SystemVersionInfo(nums[0], nums[1], nums[2]);
+                    return info;
+                }
+            }
+            return default(SystemVersionInfo);
         }
     }
 }

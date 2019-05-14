@@ -7,8 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,9 +34,12 @@ namespace Art
         private static readonly ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
         CancellationTokenSource ts = new CancellationTokenSource();
 
+        internal static MainWindow main;
         public MainWindow()
         {
             InitializeComponent();
+
+            main = this;
 
             log4net.Config.XmlConfigurator.Configure();
 
@@ -128,7 +133,9 @@ namespace Art
         private void CoverViewItem_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             ObservableCollection<ViewModel.ImageData> items = cover.ItemsSource as ObservableCollection<ViewModel.ImageData>;
-            //Todo: add items to ImageViewer
+
+            ImageViewer.Items = items;
+            new ImageViewer().ShowDialog();
         }
 
         private void MnuConfig_Click(object sender, RoutedEventArgs e)
@@ -185,7 +192,7 @@ namespace Art
         {
             var info = sender as MenuItem;
             if (info.Header.Equals("Set as Desktop"))
-                SetDesktopWallpaper();
+                SetDesktopWallpaper(info.Tag.ToString(), true);
             else if (info.Header.Equals("Go to Location"))
                 Process.Start("explorer.exe", "/select, \"" + info.Tag + "\"");
             else if (info.Header.Equals("Full Screen"))
@@ -194,11 +201,65 @@ namespace Art
                 imgBrowser.ResizeMode = ResizeMode.CanResize;
                 imgBrowser.Show();
             }
+            else if(info.Header.Equals("Add To Favorite"))
+            {
+                if (File.Exists("fav.txt"))
+                {
+                    var lines = File.ReadAllLines("fav.txt").Any(x => x.Equals(info.Tag.ToString().Trim()));
+                    if (!lines)
+                    {
+                        File.AppendAllText("fav.txt", info.Tag.ToString().Trim() + Environment.NewLine);
+                        Growl.Info(new GrowlInfo
+                        {
+                            Message = "Added to Favorite", ConfirmStr = "Confirm", ShowDateTime = false
+                        });
+                    }
+                    else
+                    {
+                        Growl.Warning(new GrowlInfo
+                        {
+                            Message = "This image exist in favorite",
+                            ConfirmStr = "Confirm",
+                            ShowDateTime = false
+                        });
+                    }
+                }
+            } else if (info.Header.Equals("Remove From Favorite"))
+            {
+                var lines = File.ReadAllLines("fav.txt").ToList();
+                lines.Remove(info.Tag.ToString().Trim());
+                File.WriteAllLines("fav.txt", lines.ToArray());
+            }
         }
 
-        private void SetDesktopWallpaper()
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool SystemParametersInfo(uint uiAction, uint uiParam, String pvParam, uint fWinIni);
+
+        private const uint SPI_SETDESKWALLPAPER = 0x14;
+        private const uint SPIF_UPDATEINIFILE = 0x1;
+        private const uint SPIF_SENDWININICHANGE = 0x2;
+        public void SetDesktopWallpaper(string file_name, bool update_registry)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // If we should update the registry,
+                // set the appropriate flags.
+                uint flags = 0;
+                if (update_registry)
+                    flags = SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE;
+
+                // Set the desktop background to this file.
+                if (!SystemParametersInfo(SPI_SETDESKWALLPAPER,
+                    0, file_name, flags))
+                {
+                    HandyControl.Controls.MessageBox.Error("SystemParametersInfo failed.", "Error");
+                }
+            }
+            catch (Exception)
+            {
+                HandyControl.Controls.MessageBox.Error("Error displaying picture ", "Error");
+            }
         }
 
         private void CancelTaskButton_Click(object sender, RoutedEventArgs e)
@@ -279,6 +340,17 @@ namespace Art
                 }
             }
             return null;
+        }
+
+        private async void Tab_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if(tab.SelectedIndex == 1)
+            {
+                GC.Collect();
+                ts?.Cancel();
+                ts = new CancellationTokenSource();
+                await((ViewModel)DataContext).LoadFavorite(ts.Token);
+            }
         }
     }
 }

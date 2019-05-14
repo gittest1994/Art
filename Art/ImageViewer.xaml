@@ -1,0 +1,43 @@
+﻿<controls:BlurWindow x:Class="Art.ImageViewer"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Art"
+                     xmlns:interactivity="clr-namespace:HandyControl.Interactivity;assembly=HandyControl"
+        mc:Ignorable="d"
+           xmlns:controls="clr-namespace:HandyControl.Controls;assembly=HandyControl"
+             Style="{StaticResource WindowBlur}"
+             NonClientAreaBackground="#FF403D3D"
+                     OtherButtonForeground="White"
+                     OtherButtonHoverForeground="White"
+                     CloseButtonForeground="Orange"
+                     ShowTitle="True"
+                     NonClientAreaForeground="White"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Title="ImageViewer" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="105"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <ToggleButton x:Name="autoPlay" IsChecked="True" Content="AutoPlay"/>
+                <Button Content="Set as Desktop" Margin="5,0" Click="Button_Click"/>
+                <Button Content="Go to Location" Margin="5,0" Click="Button_Click_1"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <controls:Shield Command="interactivity:ControlCommands.OpenLink" controls:LinkElement.Link="{Binding ElementName=shTitle, Path=Status, StringFormat='https://google.com/search?q= {0:N}'}" Name="shTitle" Subject="Title" Margin="4,0,0,0" Color="{DynamicResource DarkPrimaryBrush}"/>
+                <controls:Shield Command="interactivity:ControlCommands.OpenLink" controls:LinkElement.Link="{Binding ElementName=shArtist, Path=Status, StringFormat='https://google.com/search?q= {0:N}'}" Name="shArtist" Subject="Artist" Margin="4,0,0,0" Color="{DynamicResource DarkSuccessBrush}"/>
+                <controls:Shield Command="interactivity:ControlCommands.OpenLink" controls:LinkElement.Link="{Binding ElementName=shGallery, Path=Status, StringFormat='https://google.com/search?q= {0:N}'}" Name="shGallery" Subject="Gallery" Margin="4,0,0,0" Color="{DynamicResource DarkWarningBrush}"/>
+                <controls:Shield Name="shCity" Subject="City" Margin="4,0,0,0" Color="{DynamicResource InfoBrush}"/>
+                <controls:Shield Name="shCountry" Subject="Country" Margin="4,0,0,0" Color="{DynamicResource InfoBrush}"/>
+                <controls:Shield Name="shDate" Subject="Date" Margin="4,0,0,0" Color="{DynamicResource DarkDangerBrush}"/>
+            </StackPanel>
+            <Label Content="Click on Item to Show Detials" Margin="0,5" Style="{DynamicResource LabelPrimary}"/>
+        </StackPanel>
+        <controls:Carousel SelectionChanged="Img_SelectionChanged" Grid.Row="1" Name="img" IsCenter="True" AutoRun="{Binding ElementName=autoPlay, Path=IsChecked}"/>
+    </Grid>
+</controls:BlurWindow>
