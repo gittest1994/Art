@@ -19,6 +19,8 @@ namespace Art
     /// <summary>
     /// Interaction logic for App.xaml
     /// </summary>
+	
+	///my first edit on project
     public partial class App : Application
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(App));
