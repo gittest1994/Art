@@ -1,4 +1,4 @@
 ## Art
 Gallery App
-#for friends
+![](https://img.shields.io/badge/Git-MyGitHub-green.svg)
 ## Release 1.0
